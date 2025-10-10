@@ -1,11 +1,13 @@
+const { mongo } = require('mongoose');
+
 require('dotenv').config();
 
 const AppConfig = {
     cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
     cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
     cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
-
-    frontendUrl: process.env.FRONDTEND_URL
+    frontendUrl: process.env.FRONDTEND_URL,
+    jwtSecret: process.env.JWT_SECRET
 }
 
 const SMTPConfig = {
