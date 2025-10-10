@@ -1,4 +1,5 @@
 const express = require("express")
+require("./mongodb.config")
 const router = require("./router.config")
 const { deleteFile } = require("../utilities/helper")
 
@@ -31,6 +32,20 @@ app.use((error, req, res, next) => {
         req.files.forEach((file) => {
             deleteFile(file.path);
         });
+    }
+
+    if(error.name === "MongoServerError") {
+        if(+error.code === 11000) {
+            msg = "Validation Error";
+            code = 400;
+            status = "VALIDATION_ERROR";
+            details = {};
+
+            (Object.keys(error.keyValue))
+            .map((key) => {
+                details[key] = `${key} already exists.`;
+            });
+        }
     }
    
     res.status(code).json({
