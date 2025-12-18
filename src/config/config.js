@@ -24,8 +24,21 @@ const DbConfig = {
     mongoDBName: process.env.MONGODB_DBNAME
 }
 
+const sqlConfig = {
+  host: process.env.SQL_HOST,
+  user: process.env.SQL_USER,
+  password: process.env.SQL_PASSWORD,
+  db: process.env.SQL_DB,
+  dialect: process.env.SQL_DIALECT,
+  port: process.env.SQL_PORT
+};
+
+module.exports = { sqlConfig };
+
+
 module.exports = {
     AppConfig,
     SMTPConfig,
-    DbConfig
+    DbConfig,
+    sqlConfig
 }

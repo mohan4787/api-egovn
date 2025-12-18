@@ -1,16 +1,19 @@
 const express = require("express")
+const {authenticateSql}  = require("./sql.config")
+authenticateSql();
 require("./mongodb.config")
 const router = require("./router.config")
 const { deleteFile } = require("../utilities/helper")
 
 const app = express()
 
+
 app.use(express.json({
     limit:"10mb"
 }))
 app.use(express.urlencoded())
 
-app.use("/api/v1/",router)
+app.use("/api/v1",router)
 
 app.use((req, res, next) => {
     next({

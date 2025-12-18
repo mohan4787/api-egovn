@@ -7,7 +7,6 @@ const USER_ROLES = {
     SELLER: 'seller',
     CUSTOMER: 'customer'
 }
-
 const GENDER = {
     MALE: 'male',
     FEMALE: 'female',

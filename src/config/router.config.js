@@ -1,4 +1,5 @@
 const authRouter = require("../modules/auth/auth.router");
+const bannerRouter = require("../modules/banner/banner.router");
 
 const router = require("express").Router()
 
@@ -11,6 +12,7 @@ router.get("/", (req, res, next) => {
     })
 })
 
-router.use("/auth",authRouter)
+router.use("/auth",authRouter);
+router.use("/banner",bannerRouter)
 
 module.exports = router;
