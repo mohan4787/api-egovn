@@ -1,27 +1,12 @@
-// src/middlewares/auth.middleware.js
 const { AppConfig } = require("../config/config");
 const { USER_ROLES } = require("../config/constants");
-const authSvc = require("../modules/auth/auth.service");
-const userSvc = require("../modules/user/user.service"); // make sure this exists
+const userSvc = require("../modules/user/user.service");
 const jwt = require("jsonwebtoken");
 
-// Middleware to check if user is logged in
 const loginCheck = async (req, res, next) => {
     try {
-        let token = req.headers["authorization"] || null;
+        let token = req.headers["authorization"];
         if (!token) {
-            return next({
-                code: 401,
-                message: "Unauthorized Access",
-                status: "UNAUTHORIZED"
-            });
-        }
-        token = token.replace("Bearer ", "");
-        
-        const authData = await authSvc.getSingleRowByFilter({
-            maskedAccessToken: token
-        });
-        if (!authData) {
             return next({
                 code: 401,
                 message: "Token not found",
@@ -29,9 +14,11 @@ const loginCheck = async (req, res, next) => {
             });
         }
 
-        const data = jwt.verify(authData.accessToken, AppConfig.jwtSecret);
+        token = token.replace("Bearer ", "");
 
-        if (data.type !== "Bearer") {
+        const decoded = jwt.verify(token, AppConfig.jwtSecret);
+
+        if (decoded.type !== "Bearer") {
             return next({
                 code: 401,
                 message: "Bearer token expected",
@@ -39,8 +26,8 @@ const loginCheck = async (req, res, next) => {
             });
         }
 
-        let userDetail = await userSvc.getUserPublicProfile(
-            await userSvc.getSingleUserByFilter({ _id: data.sub })
+        const userDetail = await userSvc.getUserPublicProfile(
+            await userSvc.getSingleUserByFilter({ _id: decoded.sub })
         );
 
         if (!userDetail) {
@@ -54,11 +41,23 @@ const loginCheck = async (req, res, next) => {
         req.loggedInUser = userDetail;
         next();
     } catch (exception) {
+        if (exception.name === "JsonWebTokenError") {
+            return next({
+                code: 401,
+                message: "Invalid token",
+                status: "UNAUTHORIZED_TOKEN"
+            });
+        } else if (exception.name === "TokenExpiredError") {
+            return next({
+                code: 401,
+                message: "Token expired",
+                status: "TOKEN_EXPIRED"
+            });
+        }
         next(exception);
     }
 };
 
-// Middleware to check permission based on role
 const checkPermission = (allowedRoles = []) => {
     return (req, res, next) => {
         if (!req.loggedInUser) {

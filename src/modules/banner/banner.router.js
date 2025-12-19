@@ -1,36 +1,30 @@
-const UserRole = require('../../config/constants').USER_ROLES;
-const { loginCheck, checkPermission } = require('../../middlewares/auth.middleware');
-const { uploader } = require('../../middlewares/uploader.middleware');
-const { bodyValidator } = require('../../middlewares/request-validate.middleware');
-// const { bodyValidator } = require('../../modules/banner/banner.validators');
-const bannerCtrl = require('./banner.controller');
-const { BannerCreateDTO, BannerUpdateDTO } = require('./banner.validators');
+const router = require("express").Router();
+const multer = require("multer");
+const upload = multer({ dest: "uploads/" });
 
-const bannerRouter = require('express').Router();
+const { USER_ROLES } = require("../../config/constants");
+const { loginCheck, checkPermission } = require("../../middlewares/auth.middleware");
+const bannerCtrl = require("./banner.controller");
 
-// Public route
-bannerRouter.get('/front', bannerCtrl.lisAllForHome);
-
-// Protected routes
-bannerRouter.post(
-    '/',
+router
+  .route("/")
+  .post(
     loginCheck,
-    uploader().single('image'),
-    bodyValidator(BannerCreateDTO),
-    bannerCtrl.createBanner
-);
-bannerRouter.get('/', loginCheck, bannerCtrl.listAllData);
+    checkPermission([USER_ROLES.ADMIN, USER_ROLES.WARDOFFICIAL]),
+    upload.single("image"),
+    bannerCtrl.create
+  )
+  .get(loginCheck, bannerCtrl.listAll);
 
-// Admin-only routes
-bannerRouter.get('/:id', loginCheck, checkPermission([UserRole.ADMIN]), bannerCtrl.getById);
-bannerRouter.put(
-    '/:id',
+router
+  .route("/:id")
+  .get(loginCheck, bannerCtrl.viewDetail)
+  .put(
     loginCheck,
-    checkPermission([UserRole.ADMIN]),
-    uploader().single('image'),
-    bodyValidator(BannerUpdateDTO),
-    bannerCtrl.updateBanner
-);
-bannerRouter.delete('/:id', loginCheck, checkPermission([UserRole.ADMIN]), bannerCtrl.deleteById);
+    checkPermission([USER_ROLES.ADMIN, USER_ROLES.WARDOFFICIAL]),
+    upload.single("image"),
+    bannerCtrl.update
+  )
+  .delete(loginCheck, checkPermission([USER_ROLES.ADMIN]), bannerCtrl.deleteOne);
 
-module.exports = bannerRouter;
+module.exports = router;

@@ -1,19 +1,25 @@
 const slugify = require("slugify");
 const ServiceModel = require("./service.model");
-const { generateRandomString } = require("../../utilities/helper");
+const { randomStringGenerator } = require("../../utilities/helper"); 
+const cloudinarySvc = require("../../services/cloudinary.service");
 
 class ServiceService {
   transformServiceData = async (req) => {
     let data = req.body;
 
-    let code = generateRandomString(6);
-    data.slug = slugify(`${data.title}-${code}`, {
-      lower: true,
-      trim: true
-    });
+    let code = randomStringGenerator(6); // fixed function call
+    data.slug = slugify(`${data.title}-${code}`, { lower: true, trim: true });
 
     if (typeof data.requiredDocuments === "string") {
-      data.requiredDocuments = JSON.parse(data.requiredDocuments);
+      try {
+        data.requiredDocuments = JSON.parse(data.requiredDocuments);
+      } catch (err) {
+        data.requiredDocuments = data.requiredDocuments.split(",");
+      }
+    }
+
+    if (req.file) {
+      data.image = await cloudinarySvc.fileUpload(req.file.path, "/service/");
     }
 
     data.createdBy = req.loggedInUser._id;
@@ -22,6 +28,19 @@ class ServiceService {
 
   transformUpdateData = async (req, oldService) => {
     let data = req.body;
+
+    if (req.file) {
+      data.image = await cloudinarySvc.fileUpload(req.file.path, "/service/");
+    }
+
+    if (typeof data.requiredDocuments === "string") {
+      try {
+        data.requiredDocuments = JSON.parse(data.requiredDocuments);
+      } catch (err) {
+        data.requiredDocuments = data.requiredDocuments.split(",");
+      }
+    }
+
     data.updatedBy = req.loggedInUser._id;
     return data;
   };
@@ -36,13 +55,8 @@ class ServiceService {
       .skip(skip)
       .limit(limit)
       .sort(sort || { title: "asc" });
-
     let total = await ServiceModel.countDocuments(filter);
-
-    return {
-      data,
-      pagination: { page, limit, total }
-    };
+    return { data, pagination: { page, limit, total } };
   };
 
   getSingleRowByFilter = async (filter) => {
@@ -50,11 +64,7 @@ class ServiceService {
   };
 
   updateSingleByFilter = async (filter, data) => {
-    return await ServiceModel.findOneAndUpdate(
-      filter,
-      { $set: data },
-      { new: true }
-    );
+    return await ServiceModel.findOneAndUpdate(filter, { $set: data }, { new: true });
   };
 
   deleteSingleRowByFilter = async (filter) => {

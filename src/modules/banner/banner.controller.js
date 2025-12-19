@@ -1,145 +1,84 @@
-const { Op } = require("sequelize");
-const bannerSvc = require("./banner.service")
+const bannerSvc = require("./banner.service");
 
 class BannerController {
-  createBanner = async (req, res, next) => {
+  create = async (req, res, next) => {
     try {
-      const payload = await bannerSvc.transformBannerCreate(req);
-      const banner = await bannerSvc.storeBanner(payload);
+      const data = await bannerSvc.transformBannerCreate(req);
+      const banner = await bannerSvc.storeBanner(data);
 
       res.json({
         data: banner,
-        message: "Banner Created",
+        message: "Banner created successfully",
         status: "BANNER_CREATED",
         options: null,
       });
-    } catch (exception) {
-      next(exception);
+    } catch (err) {
+      next(err);
     }
   };
 
-  listAllData = async (req, res, next) => {
+  listAll = async (req, res, next) => {
     try {
-      let filter = {};
-      if (req.query.search) {
-        filter = {
-          title: {
-            [Op.iLike]: `%${req.query.search}%`,
-          },
-        };
-      }
-      let { data, pagination } = await bannerSvc.getAllData(req.query, filter);
+      const result = await bannerSvc.getAllData(req.query);
       res.json({
-        data: data,
-        message: "List all data",
-        status: "OK",
-        options: pagination,
+        data: result.data,
+        message: "Banner list fetched",
+        status: "LISTING_SUCCESS",
+        options: { pagination: result.pagination },
       });
-    } catch (exception) {
-      next(exception);
+    } catch (err) {
+      next(err);
     }
   };
 
-  lisAllForHome = async (req, res, next) => {
+  viewDetail = async (req, res, next) => {
     try {
-      let filter = {
-        status: "active"
-      };
-      if (req.query.search) {
-        filter = {
-          ...filter,
-          title: {
-            [Op.iLike]: `%${req.query.search}%`,
-          },
-        };
-      }
-      let { data, pagination } = await bannerSvc.getAllData(req.query, filter);
-      res.json({
-        data: data,
-        message: "List all data",
-        status: "OK",
-        options: pagination,
-      });
-    } catch (exception) {
-      next(exception);
-    }
-  };
+      const banner = await bannerSvc.getSingleRowById(req.params.id);
+      if (!banner) throw { code: 404, message: "Banner not found", status: "BANNER_NOT_FOUND" };
 
-  getById = async (req, res, next) => {
-    try {
-      let id = req.params.id;
-      const data = await bannerSvc.getSingleRowById(id);
-      if (!data) {
-        throw {
-          code: 422,
-          message: "Banner not found",
-          status: "BANNER_NOT_FOUND",
-        };
-      }
       res.json({
-        data: data,
-        message: "Banner Detail",
-        status: "BANNER_DETAIL",
+        data: banner,
+        message: "Banner detail fetched",
+        status: "BANNER_FETCHED",
         options: null,
       });
-    } catch (exception) {
-      next(exception);
+    } catch (err) {
+      next(err);
     }
   };
 
-  updateBanner = async (req, res, next) => {
+  update = async (req, res, next) => {
     try {
-      let id = req.params.id;
-      const data = await bannerSvc.getSingleRowById(id);
-      if (!data) {
-        throw {
-          code: 422,
-          message: "Banner not found",
-          status: "BANNER_NOT_FOUND",
-        };
-      }
-      //
-      const payload = await bannerSvc.transformBannerUpdate(req, data);
-      const update = await bannerSvc.updateByFilter(
-        {
-          id: id,
-        },
-        payload
-      );
+      const oldBanner = await bannerSvc.getSingleRowById(req.params.id);
+      if (!oldBanner) throw { code: 404, message: "Banner not found", status: "BANNER_NOT_FOUND" };
+
+      const updateData = await bannerSvc.transformBannerUpdate(req, oldBanner);
+      const updated = await bannerSvc.updateByFilter({ id: oldBanner.id }, updateData);
+
       res.json({
-        data: update,
-        message: "Banner Updated",
+        data: updated,
+        message: "Banner updated successfully",
         status: "BANNER_UPDATED",
         options: null,
       });
-    } catch (exception) {
-      next(exception);
+    } catch (err) {
+      next(err);
     }
   };
 
-  deleteById = async (req, res, next) => {
+  deleteOne = async (req, res, next) => {
     try {
-      let id = req.params.id;
-      const data = await bannerSvc.getSingleRowById(id);
-      if (!data) {
-        throw {
-          code: 422,
-          message: "Banner not found",
-          status: "BANNER_NOT_FOUND",
-        };
-      }
-      let response = await bannerSvc.deleteById(id);
+      const deleted = await bannerSvc.deleteById(req.params.id);
       res.json({
-        data: response,
-        message: "Banner Deleted",
+        data: deleted,
+        message: "Banner deleted successfully",
         status: "BANNER_DELETED",
         options: null,
       });
-    } catch (exception) {
-      next(exception);
+    } catch (err) {
+      next(err);
     }
   };
 }
 
-const bannerCtrl = new BannerController()
-module.exports = bannerCtrl
+module.exports = new BannerController();
