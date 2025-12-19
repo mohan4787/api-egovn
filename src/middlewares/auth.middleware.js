@@ -17,7 +17,7 @@ const loginCheck = async (req, res, next) => {
             });
         }
         token = token.replace("Bearer ", "");
-
+        
         const authData = await authSvc.getSingleRowByFilter({
             maskedAccessToken: token
         });

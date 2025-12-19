@@ -15,7 +15,7 @@ const RegisterDTO = Joi.object({
         billingAddress: Joi.string().max(100).allow(null, "").default(null),
         shippingAddress: Joi.string().max(100).allow(null, "").default(null),
     }).allow(null, "").default(null),
-    role: Joi.string().regex(/^(customer|seller|admin)$/i).default("customer"),
+    role: Joi.string().regex(/^(citizen|wardOfficial|admin)$/i).default("citizen"),
     gender: Joi.string().regex(/^(male|female|other)$/).optional().default(null),
     image: Joi.string().allow(null, "").optional().default(null),
     dob: Joi.date().allow(null,"").optional().default(null)

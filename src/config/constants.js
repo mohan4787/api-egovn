@@ -4,8 +4,8 @@ const Status = {
 }
 const USER_ROLES = {
     ADMIN: 'admin',
-    SELLER: 'seller',
-    CUSTOMER: 'customer'
+    CITIZEN: 'citizen',
+    WARDOFFICIAL: 'wardOfficial',
 }
 const GENDER = {
     MALE: 'male',
